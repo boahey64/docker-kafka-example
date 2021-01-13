@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.4.1</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.boahey64</groupId>
+	<artifactId>docker-kafka-example</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>docker-kafka-example</name>
+	<description>Demo project for Spring Boot</description>
+
+	<properties>
+		<java.version>8</java.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>io.fabric8</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.34.1</version>
+
+				<configuration>
+					<verbose>true</verbose>
+					<startParallel>true</startParallel>
+					<skip>${skipTests}</skip>
+					<containerNamePattern>%a-%i</containerNamePattern>
+
+					<images>
+						<image>
+							<name>wurstmeister/zookeeper:latest</name>
+							<alias>boahey64-comparison-zookeeper</alias>
+							<run>
+								<ports>
+									<port>2181:2181</port>
+								</ports>
+							</run>
+						</image>
+						<image>
+							<name>wurstmeister/kafka:2.12-2.3.0</name>
+							<alias>boahey64-comparison-kafka</alias>
+							<run>
+								<ports>
+									<port>9092:9092</port>
+								</ports>
+								<links>
+									<link>boahey64-comparison-zookeeper:boahey64-comparison-zookeeper</link>
+								</links>
+								<env>
+									<KAFKA_ADVERTISED_HOST_NAME>127.0.0.1</KAFKA_ADVERTISED_HOST_NAME>
+									<KAFKA_ZOOKEEPER_CONNECT>boahey64-comparison-zookeeper:2181</KAFKA_ZOOKEEPER_CONNECT>
+								</env>
+							</run>
+						</image>
+					</images>
+				</configuration>
+
+				<executions>
+					<execution>
+						<id>docker:init</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>stop</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>docker:build</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>docker:start</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>docker:stop</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>stop</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+
+</project>
